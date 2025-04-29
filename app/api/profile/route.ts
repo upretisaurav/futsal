@@ -7,14 +7,17 @@ import mongoose from "mongoose";
 import Profile from "@/models/Profile";
 
 export async function GET() {
-  await dbConnect();
-  const session = await getServerSession();
-  if (!session?.user) return new Response("Unauthorized", { status: 401 });
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.id) return new Response("Unauthorized", { status: 401 });
 
-  const userId = session.user.id;
+  await dbConnect();
+  const userId = session?.user?.id;
 
   try {
-    const profile = await Profile.findOne({ user: userId });
+    const profile = await Profile.findOne({ user: userId }).populate(
+      "user",
+      "name email"
+    );
     return new Response(JSON.stringify({ profile }), {
       headers: { "Content-Type": "application/json" },
     });
